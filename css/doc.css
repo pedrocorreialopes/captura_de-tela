@@ -1,0 +1,191 @@
+/* ==========================================================================
+   Print Fácil — estilos do guia Android (complementa css/style.css)
+   ========================================================================== */
+
+.doc-hero {
+  padding: clamp(26px, 5vw, 48px) 0 8px;
+  max-width: 62ch;
+}
+.doc-hero h1 { margin: 16px 0 0; font-size: clamp(1.75rem, 4.4vw, 2.6rem); }
+.doc-hero h1 em {
+  font-style: normal;
+  background: linear-gradient(96deg, var(--brand), var(--brand-2) 55%, var(--accent));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.doc-lead { margin-top: 14px; color: var(--text-dim); font-size: 1rem; }
+
+.callout {
+  margin-top: 20px;
+  padding: 15px 17px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-left: 3px solid var(--brand);
+}
+.callout strong { display: block; font-size: .875rem; margin-bottom: 5px; }
+.callout p { font-size: .855rem; color: var(--text-dim); }
+.callout--warn { border-left-color: var(--warn); }
+.callout--warn strong { color: var(--warn); }
+.callout--info { border-left-color: var(--brand); }
+
+/* índice */
+.doc-toc {
+  display: flex; flex-wrap: wrap; gap: 7px;
+  margin: 30px 0 6px;
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  position: sticky; top: calc(var(--header-h) + 6px); z-index: 30;
+  backdrop-filter: blur(14px);
+}
+.doc-toc a {
+  font-size: .79rem; font-weight: 600; color: var(--text-dim);
+  padding: 5px 11px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid transparent;
+  transition: color .16s, border-color .16s;
+}
+.doc-toc a:hover { color: var(--text); border-color: var(--border); }
+
+/* seções */
+.doc-section {
+  padding-top: clamp(26px, 4vw, 40px);
+  scroll-margin-top: calc(var(--header-h) + 66px);
+}
+.doc-section h2 {
+  font-size: clamp(1.15rem, 3vw, 1.4rem);
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.doc-p { color: var(--text-dim); font-size: .895rem; max-width: 74ch; margin-bottom: 14px; }
+
+/* camadas */
+.layer-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px; margin: 16px 0 20px;
+}
+.layer {
+  position: relative;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 16px 16px 18px;
+}
+.layer__num {
+  position: absolute; top: 12px; right: 14px;
+  font-size: 1.9rem; font-weight: 800; line-height: 1;
+  color: color-mix(in srgb, var(--brand) 30%, transparent);
+}
+.layer h3 { font-size: .9rem; margin-bottom: 6px; padding-right: 30px; }
+.layer p { font-size: .82rem; color: var(--text-dim); }
+
+/* tabela */
+.doc-table {
+  width: 100%; border-collapse: collapse; margin: 14px 0 6px;
+  font-size: .84rem;
+  display: block; overflow-x: auto; white-space: nowrap;
+}
+@media (min-width: 700px) { .doc-table { display: table; white-space: normal; } }
+.doc-table thead th {
+  text-align: left; font-size: .72rem; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text-faint);
+  padding: 9px 12px; border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.doc-table td {
+  padding: 11px 12px; border-bottom: 1px solid var(--border-soft);
+  color: var(--text-dim); vertical-align: top;
+}
+.doc-table td:first-child { color: var(--text); font-weight: 550; }
+
+/* código */
+.code-wrap { position: relative; margin: 14px 0 6px; }
+
+.copy-btn {
+  position: absolute; top: 9px; right: 9px; z-index: 2;
+  font-size: .68rem; font-weight: 700; letter-spacing: .05em;
+  padding: 5px 9px; border-radius: 7px; cursor: pointer;
+  background: rgba(255, 255, 255, .09); color: #cfd6e6;
+  border: 1px solid rgba(255, 255, 255, .16);
+  backdrop-filter: blur(6px);
+  transition: background .16s, color .16s;
+}
+.copy-btn:hover { background: rgba(255, 255, 255, .18); color: #fff; }
+
+.code {
+  margin: 0;
+  padding: 16px 16px 18px;
+  border-radius: var(--r-md);
+  background: #0c0f16;
+  border: 1px solid #1c2230;
+  overflow-x: auto;
+  font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: .775rem;
+  line-height: 1.7;
+  color: #c9d3e6;
+  tab-size: 2;
+}
+.code code { font: inherit; color: inherit; white-space: pre; }
+.code::before {
+  content: attr(data-lang);
+  display: block;
+  font-size: .64rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: #5d6a85;
+  margin-bottom: 10px;
+}
+
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: .88em;
+  background: color-mix(in srgb, var(--brand) 12%, transparent);
+  color: var(--text);
+  padding: 1px 5px;
+  border-radius: 5px;
+}
+.code code { background: none; padding: 0; border-radius: 0; }
+
+/* passos */
+.steps { list-style: none; counter-reset: step; margin: 14px 0 4px; padding: 0; }
+.steps li {
+  counter-increment: step;
+  position: relative;
+  padding: 0 0 20px 46px;
+  border-left: 1px solid var(--border);
+  margin-left: 15px;
+}
+.steps li:last-child { border-left-color: transparent; padding-bottom: 4px; }
+.steps li::before {
+  content: counter(step);
+  position: absolute; left: -15px; top: -3px;
+  width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--brand); font-size: .78rem; font-weight: 800;
+}
+.steps strong { display: block; font-size: .9rem; margin-bottom: 3px; }
+.steps p { font-size: .845rem; color: var(--text-dim); }
+
+/* checklist */
+.checklist { list-style: none; margin: 14px 0 24px; padding: 0; display: grid; gap: 8px; }
+.checklist li {
+  position: relative;
+  padding: 11px 14px 11px 42px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  font-size: .855rem;
+  color: var(--text-dim);
+}
+.checklist li::before {
+  content: "✓";
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  color: var(--accent); font-weight: 800; font-size: .9rem;
+}
+
+@media (max-width: 560px) {
+  .doc-toc { position: static; }
+  .code { font-size: .72rem; padding: 14px 12px 16px; }
+  .doc-section { scroll-margin-top: calc(var(--header-h) + 10px); }
+}
