@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Print Fácil — Captura de tela em um toque</title>
+<meta name="description" content="Print Fácil: capture a tela em um único toque com um botão flutuante arrastável, organize suas capturas e compartilhe. Privacidade total: tudo fica no seu dispositivo.">
+<meta name="theme-color" content="#0b0d13">
+<meta name="color-scheme" content="dark light">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Print Fácil">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Pular para o conteúdo</a>
+
+<div class="app-shell">
+
+  <!-- ================= CABEÇALHO ================= -->
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8.5V6.2A2.2 2.2 0 0 1 5.2 4h2.3"/>
+          <path d="M21 8.5V6.2A2.2 2.2 0 0 0 18.8 4h-2.3"/>
+          <path d="M3 15.5v2.3A2.2 2.2 0 0 0 5.2 20h2.3"/>
+          <path d="M21 15.5v2.3A2.2 2.2 0 0 1 18.8 20h-2.3"/>
+          <circle cx="12" cy="12" r="3.4"/>
+        </svg>
+      </span>
+      <span class="brand-text">
+        <strong>Print Fácil</strong>
+        <small>captura em um toque</small>
+      </span>
+    </div>
+
+    <nav class="top-nav" aria-label="Navegação principal">
+      <button class="top-nav__item is-active" data-route="home" type="button">Início</button>
+      <button class="top-nav__item" data-route="gallery" type="button">
+        Minhas capturas <span class="pill-count" id="nav-count" hidden>0</span>
+      </button>
+      <button class="top-nav__item" data-route="settings" type="button">Ajustes</button>
+      <a class="top-nav__item top-nav__link" href="android.html">Android</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="icon-btn" id="theme-toggle" type="button" aria-label="Alternar tema" title="Alternar tema">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8Z"/></svg>
+      </button>
+      <button class="icon-btn only-mobile" id="quick-capture" type="button" aria-label="Capturar agora">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5h2.2l1.3-2h9l1.3 2H20a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19.5H4A1.5 1.5 0 0 1 2.5 18v-8A1.5 1.5 0 0 1 4 8.5Z"/><circle cx="12" cy="13.6" r="3.2"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ================= INÍCIO ================= -->
+    <section class="view" id="view-home" aria-labelledby="home-title">
+      <div class="hero">
+        <div class="hero__glow" aria-hidden="true"></div>
+        <div class="hero__content">
+          <span class="chip" id="capture-status" data-state="checking">
+            <span class="chip__dot" aria-hidden="true"></span>
+            <span id="capture-status-text">Verificando disponibilidade…</span>
+          </span>
+          <h1 id="home-title">Capture a tela em<br><em>um único toque</em></h1>
+          <p class="hero__lead">
+            Toque no botão flutuante e escolha o que capturar. A imagem é salva apenas neste
+            dispositivo — nada é enviado para servidores.
+          </p>
+
+          <div class="hero__actions">
+            <button class="btn btn--primary btn--lg" id="btn-capture" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5h2.2l1.3-2h9l1.3 2H20a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19.5H4A1.5 1.5 0 0 1 2.5 18v-8A1.5 1.5 0 0 1 4 8.5Z"/><circle cx="12" cy="13.6" r="3.2"/></svg>
+              Nova captura
+            </button>
+            <button class="btn btn--ghost btn--lg" data-route="gallery" type="button">
+              Ver galeria
+            </button>
+          </div>
+
+          <dl class="hero__stats">
+            <div><dt>Capturas</dt><dd id="stat-total">0</dd></div>
+            <div><dt>Espaço usado</dt><dd id="stat-size">0 KB</dd></div>
+            <div><dt>Última</dt><dd id="stat-last">—</dd></div>
+          </dl>
+        </div>
+
+        <div class="hero__preview" aria-hidden="true">
+          <div class="mock-window">
+            <div class="mock-window__bar"><span></span><span></span><span></span></div>
+            <div class="mock-shot">
+              <span class="mock-frame"></span>
+              <span class="mock-flash"></span>
+            </div>
+            <div class="mock-window__fab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5h2.2l1.3-2h9l1.3 2H20a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19.5H4A1.5 1.5 0 0 1 2.5 18v-8A1.5 1.5 0 0 1 4 8.5Z"/><circle cx="12" cy="13.6" r="3.2"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section class="latest" aria-labelledby="latest-title">
+        <div class="section-head">
+          <h2 id="latest-title">Últimas capturas</h2>
+          <button class="link-btn" data-route="gallery" type="button">Ver todas</button>
+        </div>
+        <div class="latest-grid" id="latest-grid"></div>
+        <p class="empty-hint" id="latest-empty">
+          Nenhuma captura ainda. Toque no botão flutuante
+          <span class="inline-fab" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5h2.2l1.3-2h9l1.3 2H20a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19.5H4A1.5 1.5 0 0 1 2.5 18v-8A1.5 1.5 0 0 1 4 8.5Z"/><circle cx="12" cy="13.6" r="3.2"/></svg>
+          </span>
+          para começar.
+        </p>
+      </section>
+
+      <section class="feature-row" aria-label="Recursos">
+        <article class="feature">
+          <span class="feature__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><rect x="6.5" y="6.5" width="11" height="11" rx="2.4"/></svg>
+          </span>
+          <h3>Botão flutuante</h3>
+          <p>Arraste para onde quiser. A posição, o tamanho e a transparência são lembrados.</p>
+        </article>
+        <article class="feature">
+          <span class="feature__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+          </span>
+          <h3>Galeria local</h3>
+          <p>Miniaturas agrupadas por data, em IndexedDB. Funciona offline.</p>
+        </article>
+        <article class="feature">
+          <span class="feature__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          </span>
+          <h3>Privado por padrão</h3>
+          <p>Capturas ficam no seu navegador. Você decide quando baixar ou compartilhar.</p>
+        </article>
+      </section>
+    </section>
+
+    <!-- ================= GALERIA ================= -->
+    <section class="view hidden" id="view-gallery" aria-labelledby="gallery-title">
+      <div class="gallery-head">
+        <div>
+          <h1 id="gallery-title">Minhas capturas</h1>
+          <p class="muted" id="gallery-summary">0 imagens</p>
+        </div>
+        <div class="gallery-head__actions">
+          <button class="btn btn--ghost btn--sm" id="btn-select-mode" type="button">Selecionar</button>
+          <button class="btn btn--primary btn--sm" id="btn-capture-2" type="button">Nova captura</button>
+        </div>
+      </div>
+
+      <div class="selection-bar hidden" id="selection-bar">
+        <label class="check">
+          <input type="checkbox" id="select-all">
+          <span>Selecionar tudo</span>
+        </label>
+        <span class="selection-bar__count" id="selection-count">0 selecionadas</span>
+        <div class="selection-bar__actions">
+          <button class="btn btn--ghost btn--sm" id="btn-download-selected" type="button">Baixar</button>
+          <button class="btn btn--danger btn--sm" id="btn-delete-selected" type="button">Excluir</button>
+          <button class="btn btn--quiet btn--sm" id="btn-cancel-select" type="button">Concluir</button>
+        </div>
+      </div>
+
+      <div class="gallery" id="gallery-groups"></div>
+
+      <div class="empty-state" id="gallery-empty">
+        <span class="empty-state__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="m4 17.5 4.8-4.4a1.6 1.6 0 0 1 2.2 0l3 2.8"/><path d="m14.6 15.4 1.7-1.5a1.6 1.6 0 0 1 2.2 0l2.5 2.2"/></svg>
+        </span>
+        <h2>Sua galeria está vazia</h2>
+        <p>As capturas aparecem aqui automaticamente, organizadas por data.</p>
+        <button class="btn btn--primary" data-capture type="button">Fazer a primeira captura</button>
+      </div>
+    </section>
+
+    <!-- ================= AJUSTES ================= -->
+    <section class="view hidden" id="view-settings" aria-labelledby="settings-title">
+      <div class="gallery-head">
+        <div>
+          <h1 id="settings-title">Ajustes</h1>
+          <p class="muted">Preferências salvas neste dispositivo.</p>
+        </div>
+        <button class="btn btn--quiet btn--sm" id="btn-reset-settings" type="button">Restaurar padrões</button>
+      </div>
+
+      <div class="settings-grid">
+        <section class="card" aria-labelledby="s-fab">
+          <h2 id="s-fab">Botão flutuante</h2>
+
+          <label class="row">
+            <span class="row__text">
+              <strong>Exibir botão flutuante</strong>
+              <small>Fica sempre visível sobre a interface do app.</small>
+            </span>
+            <input type="checkbox" class="switch" id="set-fab-enabled" checked>
+          </label>
+
+          <label class="row row--stack">
+            <span class="row__text"><strong>Tamanho</strong><small><span id="fab-size-val">64</span> px</small></span>
+            <input type="range" id="set-fab-size" min="44" max="96" step="2" value="64">
+          </label>
+
+          <label class="row row--stack">
+            <span class="row__text"><strong>Transparência</strong><small><span id="fab-opacity-val">96</span>% de opacidade</small></span>
+            <input type="range" id="set-fab-opacity" min="35" max="100" step="1" value="96">
+          </label>
+
+          <label class="row row--stack">
+            <span class="row__text"><strong>Posição inicial</strong><small>Aplicada ao restaurar o padrão.</small></span>
+            <select class="select" id="set-fab-position">
+              <option value="br">Inferior direita</option>
+              <option value="bl">Inferior esquerda</option>
+              <option value="tr">Superior direita</option>
+              <option value="tl">Superior esquerda</option>
+              <option value="mr">Centro direita</option>
+            </select>
+          </label>
+
+          <button class="btn btn--ghost btn--sm" id="btn-reset-fab" type="button">Reposicionar botão</button>
+        </section>
+
+        <section class="card" aria-labelledby="s-capture">
+          <h2 id="s-capture">Captura</h2>
+
+          <div class="row row--stack">
+            <span class="row__text"><strong>Formato</strong><small>JPG gera arquivos menores.</small></span>
+            <div class="segmented" role="group" aria-label="Formato da imagem">
+              <label><input type="radio" name="format" value="png" checked><span>PNG</span></label>
+              <label><input type="radio" name="format" value="jpg"><span>JPG</span></label>
+            </div>
+          </div>
+
+          <label class="row row--stack">
+            <span class="row__text"><strong>Qualidade</strong><small><span id="quality-val">92</span>% — usada apenas em JPG</small></span>
+            <input type="range" id="set-quality" min="40" max="100" step="1" value="92">
+          </label>
+
+          <label class="row">
+            <span class="row__text">
+              <strong>Ocultar botão na captura</strong>
+              <small>Esconde o botão flutuante e a interface por um instante antes de fotografar.</small>
+            </span>
+            <input type="checkbox" class="switch" id="set-hide-fab" checked>
+          </label>
+
+          <label class="row">
+            <span class="row__text">
+              <strong>Salvar automaticamente</strong>
+              <small>Se desativado, você confirma o salvamento na prévia.</small>
+            </span>
+            <input type="checkbox" class="switch" id="set-autosave" checked>
+          </label>
+
+          <label class="row">
+            <span class="row__text">
+              <strong>Vibração ao capturar</strong>
+              <small>Somente em dispositivos com suporte.</small>
+            </span>
+            <input type="checkbox" class="switch" id="set-vibrate" checked>
+          </label>
+        </section>
+
+        <section class="card" aria-labelledby="s-look">
+          <h2 id="s-look">Aparência</h2>
+          <div class="row row--stack">
+            <span class="row__text"><strong>Tema</strong><small>Claro, escuro ou conforme o sistema.</small></span>
+            <div class="segmented" role="group" aria-label="Tema">
+              <label><input type="radio" name="theme" value="system"><span>Sistema</span></label>
+              <label><input type="radio" name="theme" value="light"><span>Claro</span></label>
+              <label><input type="radio" name="theme" value="dark" checked><span>Escuro</span></label>
+            </div>
+          </div>
+          <p class="note">
+            A captura de tela depende da autorização do navegador. Em cada nova
+            captura o sistema pede que você escolha a tela ou janela.
+          </p>
+        </section>
+
+        <section class="card" aria-labelledby="s-data">
+          <h2 id="s-data">Dados e privacidade</h2>
+          <ul class="data-list">
+            <li><span>Capturas salvas</span><strong id="data-count">0</strong></li>
+            <li><span>Espaço ocupado</span><strong id="data-size">0 KB</strong></li>
+            <li><span>Armazenamento</span><strong>IndexedDB local</strong></li>
+            <li><span>Envio externo</span><strong>Nenhum</strong></li>
+          </ul>
+          <button class="btn btn--danger btn--sm" id="btn-clear-all" type="button">Apagar todas as capturas</button>
+          <p class="note">
+            Apagar as capturas é permanente. Se quiser guardar uma cópia,
+            baixe as imagens antes.
+          </p>
+        </section>
+
+        <section class="card" aria-labelledby="s-native">
+          <h2 id="s-native">Botão sobre outros aplicativos</h2>
+          <p class="note">
+            Uma página HTML não pode sobrepor outros apps nem capturar o sistema
+            livremente. Isso exige a camada nativa Android (overlay + MediaProjection),
+            já documentada neste projeto.
+          </p>
+          <a class="btn btn--ghost btn--sm" href="android.html">Abrir guia Android</a>
+        </section>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <span>Print Fácil · capturas 100% locais</span>
+    <span class="dot" aria-hidden="true">•</span>
+    <button class="link-btn" data-route="settings" type="button">Ajustes</button>
+    <span class="dot" aria-hidden="true">•</span>
+    <a class="link-btn" href="android.html">Versão Android</a>
+  </footer>
+</div>
+
+<!-- ================= NAVEGAÇÃO INFERIOR (MOBILE) ================= -->
+<nav class="tabbar" aria-label="Navegação inferior">
+  <button class="tabbar__item is-active" data-route="home" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.4 12 4l8 6.4V19a1.6 1.6 0 0 1-1.6 1.6H5.6A1.6 1.6 0 0 1 4 19Z"/></svg>
+    <span>Início</span>
+  </button>
+  <button class="tabbar__item" data-route="gallery" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="m4 17.5 4.8-4.4a1.6 1.6 0 0 1 2.2 0l3 2.8"/></svg>
+    <span>Capturas</span>
+  </button>
+  <button class="tabbar__item" data-route="settings" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 14.4a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.3a1.9 1.9 0 1 1-3.8 0v-.2a1.6 1.6 0 0 0-2.8-1.1l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0-1.1-2.7H4a1.9 1.9 0 1 1 0-3.8h.2a1.6 1.6 0 0 0 1.1-2.8l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.6 1.6 0 0 0 2.7-1.1V4a1.9 1.9 0 1 1 3.8 0v.2a1.6 1.6 0 0 0 2.8 1.1l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0 1.1 2.7h.3a1.9 1.9 0 1 1 0 3.8h-.3a1.6 1.6 0 0 0-1.4 1Z"/></svg>
+    <span>Ajustes</span>
+  </button>
+</nav>
+
+<!-- ================= BOTÃO FLUTUANTE ================= -->
+<button class="fab" id="fab" type="button" aria-label="Fazer captura de tela" title="Capturar tela">
+  <span class="fab__ripple" aria-hidden="true"></span>
+  <svg class="fab__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M4 8.5h2.2l1.3-2h9l1.3 2H20a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19.5H4A1.5 1.5 0 0 1 2.5 18v-8A1.5 1.5 0 0 1 4 8.5Z"/>
+    <circle cx="12" cy="13.6" r="3.2"/>
+  </svg>
+  <span class="fab__badge" id="fab-badge" hidden>0</span>
+</button>
+
+<!-- ================= MODAL: PRÉVIA ================= -->
+<div class="modal" id="modal-preview" role="dialog" aria-modal="true" aria-labelledby="preview-title" hidden>
+  <div class="modal__backdrop" data-close-modal></div>
+  <div class="modal__panel">
+    <header class="modal__head">
+      <div>
+        <h2 id="preview-title">Captura pronta</h2>
+        <p class="muted" id="preview-meta">—</p>
+      </div>
+      <button class="icon-btn" type="button" data-close-modal aria-label="Fechar prévia">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+    <div class="modal__body modal__body--shot">
+      <img id="preview-img" alt="Prévia da captura de tela" src="">
+    </div>
+    <footer class="modal__foot">
+      <button class="btn btn--primary" id="btn-preview-save" type="button">Salvar</button>
+      <button class="btn btn--ghost" id="btn-preview-share" type="button">Compartilhar</button>
+      <button class="btn btn--ghost" id="btn-preview-download" type="button">Baixar</button>
+      <button class="btn btn--danger" id="btn-preview-delete" type="button">Excluir</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ================= MODAL: VISUALIZADOR ================= -->
+<div class="modal modal--full" id="modal-viewer" role="dialog" aria-modal="true" aria-labelledby="viewer-title" hidden>
+  <div class="modal__backdrop" data-close-modal></div>
+  <div class="modal__panel">
+    <header class="modal__head">
+      <div>
+        <h2 id="viewer-title">Captura</h2>
+        <p class="muted" id="viewer-meta">—</p>
+      </div>
+      <button class="icon-btn" type="button" data-close-modal aria-label="Fechar visualizador">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+    <div class="modal__body modal__body--viewer">
+      <button class="viewer-nav viewer-nav--prev" id="viewer-prev" type="button" aria-label="Captura anterior">‹</button>
+      <img id="viewer-img" alt="Captura de tela em tamanho real" src="">
+      <button class="viewer-nav viewer-nav--next" id="viewer-next" type="button" aria-label="Próxima captura">›</button>
+    </div>
+    <footer class="modal__foot">
+      <button class="btn btn--ghost" id="btn-viewer-download" type="button">Baixar</button>
+      <button class="btn btn--ghost" id="btn-viewer-share" type="button">Compartilhar</button>
+      <button class="btn btn--ghost" id="btn-viewer-copy" type="button">Copiar</button>
+      <button class="btn btn--danger" id="btn-viewer-delete" type="button">Excluir</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ================= MODAL: CONFIRMAÇÃO ================= -->
+<div class="modal modal--sm" id="modal-confirm" role="dialog" aria-modal="true" aria-labelledby="confirm-title" hidden>
+  <div class="modal__backdrop" data-close-modal></div>
+  <div class="modal__panel">
+    <header class="modal__head">
+      <h2 id="confirm-title">Confirmar</h2>
+    </header>
+    <div class="modal__body">
+      <p id="confirm-text">Tem certeza?</p>
+    </div>
+    <footer class="modal__foot">
+      <button class="btn btn--ghost" id="confirm-cancel" type="button">Cancelar</button>
+      <button class="btn btn--danger" id="confirm-ok" type="button">Confirmar</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ================= SOBREPOSIÇÕES DE ESTADO ================= -->
+<div class="capture-overlay" id="capture-overlay" hidden>
+  <div class="capture-overlay__inner">
+    <span class="spinner" aria-hidden="true"></span>
+    <p id="capture-overlay-text">Aguardando autorização do navegador…</p>
+    <small>Escolha a tela ou janela na janela do sistema.</small>
+  </div>
+</div>
+
+<div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="false"></div>
+
+<script src="js/utils.js"></script>
+<script src="js/db.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/capture.js"></script>
+<script src="js/fab.js"></script>
+<script src="js/gallery.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Print Fácil — Versão Android (botão sobre outros apps)</title>
+<meta name="description" content="Arquitetura nativa Android do Print Fácil: overlay com SYSTEM_ALERT_WINDOW, serviço em primeiro plano, MediaProjection e ponte JavaScript.">
+<meta name="theme-color" content="#0b0d13">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/doc.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Pular para o conteúdo</a>
+
+<div class="app-shell">
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8.5V6.2A2.2 2.2 0 0 1 5.2 4h2.3"/>
+          <path d="M21 8.5V6.2A2.2 2.2 0 0 0 18.8 4h-2.3"/>
+          <path d="M3 15.5v2.3A2.2 2.2 0 0 0 5.2 20h2.3"/>
+          <path d="M21 15.5v2.3A2.2 2.2 0 0 1 18.8 20h-2.3"/>
+          <circle cx="12" cy="12" r="3.4"/>
+        </svg>
+      </span>
+      <span class="brand-text">
+        <strong>Print Fácil</strong>
+        <small>guia Android</small>
+      </span>
+    </div>
+
+    <nav class="top-nav" aria-label="Navegação principal">
+      <a class="top-nav__item top-nav__link" href="index.html">Início</a>
+      <a class="top-nav__item top-nav__link" href="index.html#/gallery">Minhas capturas</a>
+      <a class="top-nav__item top-nav__link" href="index.html#/settings">Ajustes</a>
+      <a class="top-nav__item top-nav__link is-active" href="android.html">Android</a>
+    </nav>
+
+    <div class="header-actions">
+      <a class="icon-btn" href="index.html" aria-label="Voltar ao app" title="Voltar ao app">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6 8.5 12l6 6"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="doc-hero" aria-labelledby="doc-title">
+      <span class="chip" data-state="warn">
+        <span class="chip__dot" aria-hidden="true"></span>
+        <span>Recurso nativo necessário</span>
+      </span>
+      <h1 id="doc-title">Botão flutuante <em>sobre outros aplicativos</em></h1>
+      <p class="doc-lead">
+        O Print Fácil web captura a tela com autorização do navegador. Para manter um botão
+        flutuante visível sobre o WhatsApp, a galeria ou qualquer outro app — e capturar a
+        tela do sistema — é obrigatório empacotar a interface em um app Android com uma
+        camada nativa em Kotlin.
+      </p>
+      <div class="callout callout--warn">
+        <strong>Limite real da plataforma web</strong>
+        <p>
+          Nenhuma página HTML, mesmo instalada como PWA, pode desenhar sobre outros apps nem
+          ler o framebuffer do sistema. <code>SYSTEM_ALERT_WINDOW</code>,
+          <code>MediaProjection</code> e serviço em primeiro plano só existem no Android SDK.
+          O app web continua sendo a interface e a galeria; o nativo faz o overlay e a captura.
+        </p>
+      </div>
+    </section>
+
+    <nav class="doc-toc" aria-label="Índice do guia">
+      <a href="#arquitetura">Arquitetura</a>
+      <a href="#permissoes">Permissões</a>
+      <a href="#manifest">AndroidManifest</a>
+      <a href="#overlay">Serviço de overlay</a>
+      <a href="#captura">MediaProjection</a>
+      <a href="#ponte">Ponte JavaScript</a>
+      <a href="#jornada">Fluxo do usuário</a>
+      <a href="#checklist">Checklist</a>
+    </nav>
+
+    <section class="doc-section" id="arquitetura" aria-labelledby="h-arquitetura">
+      <h2 id="h-arquitetura">1. Arquitetura em três camadas</h2>
+      <div class="layer-grid">
+        <article class="layer">
+          <span class="layer__num">1</span>
+          <h3>WebView / interface</h3>
+          <p>O mesmo HTML/CSS/JS deste projeto roda no <code>WebView</code>. Galeria, ajustes e prévia continuam em IndexedDB.</p>
+        </article>
+        <article class="layer">
+          <span class="layer__num">2</span>
+          <h3>Ponte JavaScript</h3>
+          <p><code>addJavascriptInterface</code> expõe <code>PrintFacilNative</code>; o WebView recebe eventos via <code>evaluateJavascript</code>.</p>
+        </article>
+        <article class="layer">
+          <span class="layer__num">3</span>
+          <h3>Nativo Kotlin</h3>
+          <p>Serviço em primeiro plano mantém o overlay com <code>TYPE_APPLICATION_OVERLAY</code> e executa o <code>MediaProjection</code>.</p>
+        </article>
+      </div>
+      <pre class="code" data-lang="Arquivo"><code>app/
+├─ MainActivity.kt               // hospeda o WebView + ponte
+├─ FloatingButtonService.kt      // overlay arrastável (foreground service)
+├─ ScreenCaptureManager.kt       // MediaProjection → Bitmap → PNG/JPG
+├─ PrefsStore.kt                 // posição, tamanho, opacidade, formato
+└─ assets/  (index.html, css/, js/, icons/, manifest.webmanifest)</code></pre>
+    </section>
+
+    <section class="doc-section" id="permissoes" aria-labelledby="h-permissoes">
+      <h2 id="h-permissoes">2. Permissões e o consentimento em cada versão</h2>
+      <table class="doc-table">
+        <thead>
+          <tr><th>Permissão</th><th>Para quê</th><th>Como é concedida</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>SYSTEM_ALERT_WINDOW</code></td>
+            <td>Desenhar o botão sobre outros apps</td>
+            <td>Intent <code>ACTION_MANAGE_OVERLAY_PERMISSION</code> → tela de Ajustes do usuário (não é runtime permission)</td>
+          </tr>
+          <tr>
+            <td><code>FOREGROUND_SERVICE</code></td>
+            <td>Manter o overlay vivo fora do app</td>
+            <td>Declarada no manifest + notificação obrigatória</td>
+          </tr>
+          <tr>
+            <td><code>FOREGROUND_SERVICE_MEDIA_PROJECTION</code></td>
+            <td>Serviço de projeção (Android 14+)</td>
+            <td>Declarada + <code>foregroundServiceType="mediaProjection"</code></td>
+          </tr>
+          <tr>
+            <td><code>POST_NOTIFICATIONS</code></td>
+            <td>Notificação do serviço (Android 13+)</td>
+            <td>Runtime permission via <code>rememberLauncherForActivityResult</code></td>
+          </tr>
+          <tr>
+            <td><code>MediaProjection</code></td>
+            <td>Capturar a tela do sistema</td>
+            <td>Diálogo do sistema <code>createScreenCaptureIntent()</code> — sempre por sessão/token</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        <strong>Regra de ouro</strong>
+        <p>
+          Cada captura precisa de um token de <code>MediaProjection</code> válido. No Android 14+
+          o token é de uso único: reutilizar o <code>VirtualDisplay</code> antigo derruba o app.
+          A solução é manter uma única sessão ativa enquanto o serviço estiver em primeiro plano,
+          criando um novo <code>ImageReader</code> por captura a partir do mesmo display.
+        </p>
+      </div>
+    </section>
+
+    <section class="doc-section" id="manifest" aria-labelledby="h-manifest">
+      <h2 id="h-manifest">3. AndroidManifest.xml</h2>
+      <div class="code-wrap">
+        <button class="copy-btn" type="button" data-copy>SGE</button>
+        <pre class="code" data-lang="XML"><code>&lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"&gt;
+
+  &lt;uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" /&gt;
+  &lt;uses-permission android:name="android.permission.FOREGROUND_SERVICE" /&gt;
+  &lt;uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" /&gt;
+  &lt;uses-permission android:name="android.permission.POST_NOTIFICATIONS" /&gt;
+
+  &lt;application
+      android:label="Print Fácil"
+      android:icon="@mipmap/ic_launcher"
+      android:theme="@style/Theme.PrintFacil"&gt;
+
+    &lt;activity
+        android:name=".MainActivity"
+        android:exported="true"
+        android:configChanges="orientation|screenSize|keyboardHidden"&gt;
+      &lt;intent-filter&gt;
+        &lt;action android:name="android.intent.action.MAIN" /&gt;
+        &lt;category android:name="android.intent.category.LAUNCHER" /&gt;
+      &lt;/intent-filter&gt;
+    &lt;/activity&gt;
+
+    &lt;service
+        android:name=".FloatingButtonService"
+        android:exported="false"
+        android:foregroundServiceType="mediaProjection" /&gt;
+
+  &lt;/application&gt;
+&lt;/manifest&gt;</code></pre>
+      </div>
+    </section>
+
+    <section class="doc-section" id="overlay" aria-labelledby="h-overlay">
+      <h2 id="h-overlay">4. Serviço em primeiro plano com o botão flutuante</h2>
+      <p class="doc-p">
+        O <code>WindowManager</code> recebe uma <code>View</code> com
+        <code>TYPE_APPLICATION_OVERLAY</code> (Android 8+) ou <code>TYPE_PHONE</code> em versões
+        antigas. O arrasto usa <code>OnTouchListener</code> com <code>FLAG_NOT_FOCUSABLE</code>,
+        e a posição é salva para sobreviver a reinícios.
+      </p>
+      <div class="code-wrap">
+        <button class="copy-btn" type="button" data-copy>COPIAR</button>
+        <pre class="code" data-lang="Kotlin"><code>class FloatingButtonService : Service() {
+
+    private lateinit var windowManager: WindowManager
+    private lateinit var button: ImageView
+    private lateinit var params: WindowManager.LayoutParams
+    private var capture: ScreenCaptureManager? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        startForeground(NOTIF_ID, buildNotification())
+        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        showFloatingButton()
+    }
+
+    private fun showFloatingButton() {
+        button = ImageView(this).apply {
+            setImageResource(SGE(R.drawable.ic_camera))
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(Color.parseColor("#5B8CFF"))
+            }
+            elevation = 12f
+        }
+
+        val size = PrefsStore.buttonSize(this)          // 44..96 dp
+        params = WindowManager.LayoutParams(
+            size, size,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+            x = PrefsStore.x(this@FloatingButtonService)
+            y = PrefsStore.y(this@FloatingButtonService)
+            alpha = PrefsStore.opacity(this@FloatingButtonService)  // 0.35..1.0
+        }
+
+        button.setOnTouchListener(DragTouchListener())
+        windowManager.addView(button, params)
+    }
+
+    /** Distingue toque de arrasto: só captura se o dedo não se moveu. */
+    private inner class DragTouchListener : View.OnTouchListener {
+        private var initialX = 0
+        private var initialY = 0
+        private var touchX = 0f
+        private var touchY = 0f
+        private var moved = false
+
+        override fun onTouch(v: View, event: MotionEvent): Boolean {
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -&gt; {
+                    initialX = params.x; initialY = params.y
+                    touchX = event.rawX; touchY = event.rawY
+                    moved = false
+                    v.animate().scaleX(0.9f).scaleY(0.9f).setDuration(90).start()
+                    return true
+                }
+                MotionEvent.ACTION_MOVE -&gt; {
+                    val dx = (event.rawX - touchX).toInt()
+                    val dy = (event.rawY - touchY).toInt()
+                    if (abs(dx) &gt; DRAG_SLOP || abs(dy) &gt; DRAG_SLOP) moved = true
+                    if (moved) {
+                        params.x = initialX + dx
+                        params.y = initialY + dy
+                        windowManager.updateViewLayout(v, params)
+                    }
+                    return true
+                }
+                MotionEvent.ACTION_UP -&gt; {
+                    v.animate().scaleX(1f).scaleY(1f).setDuration(120).start()
+                    if (moved) {
+                        PrefsStore.savePosition(this@FloatingButtonService, params.x, params.y)
+                    } else {
+                        onCaptureRequested()   // toque simples → captura
+                    }
+                    return true
+                }
+            }
+            return false
+        }
+    }
+
+    private fun onCaptureRequested() {
+        capture = ScreenCaptureManager(this) { bitmap -&gt;
+            // 1) esconde o overlay para ele não sair na imagem
+            button.visibility = View.INVISIBLE
+            // 2) salva e devolve para a interface web
+            val file = saveBitmap(bitmap)          // PNG ou JPG conforme ajuste
+            button.visibility = View.VISIBLE
+            MainActivity.webView?.post {
+                MainActivity.webView?.evaluateJavascript(
+                    "window.PrintFacilNative_receive('${file.toURI()}')", null
+                )
+            }
+        }
+        capture?.requestCapture(this, button)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        capture?.release()
+        if (::button.isInitialized) windowManager.removeView(button)
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    companion object {
+        private const val NOTIF_ID = 4201
+        private const val DRAG_SLOP = 8
+    }
+}</code></pre>
+      </div>
+      <div class="callout callout--info">
+        <strong>Android 12+ e a notificação</strong>
+        <p>
+          Serviços em primeiro plano não podem iniciar a partir do background sem uma exceção
+          válida. Inicie o serviço quando o usuário tocar em “Ativar botão flutuante” no app
+          (contexto de primeiro plano), e nunca a partir de um <code>BOOT_COMPLETED</code>
+          receive sem checar <code>canStartForegroundService</code>.
+        </p>
+      </div>
+    </section>
+
+    <section class="doc-section" id="captura" aria-labelledby="h-captura">
+      <h2 id="h-captura">5. MediaProjection → Bitmap → arquivo</h2>
+      <div class="code-wrap">
+        <button class="copy-btn" type="button" data-copy>COPIAR</button>
+        <pre class="code" data-lang="Kotlin"><code>class ScreenCaptureManager(
+    private val context: Context,
+    private val onBitmap: (Bitmap) -&gt; Unit
+) {
+    private var projection: MediaProjection? = null
+    private var virtualDisplay: VirtualDisplay? = null
+    private var imageReader: ImageReader? = null
+    private val handler = Handler(Looper.getMainLooper())
+
+    /** Abre o diálogo do sistema uma única vez e mantém a sessão viva. */
+    fun requestCapture(activity: Activity, launchUi: ActivityResultLauncher&lt;Intent&gt;) {
+        val mgr = context.getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        launchUi.launch(mgr.createScreenCaptureIntent())
+    }
+
+    fun onActivityResult(resultCode: Int, data: Intent, metrics: DisplayMetrics) {
+        val mgr = context.getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        projection = mgr.getMediaProjection(resultCode, data) ?: return
+
+        // Android 14+ exige um callback antes de criar o VirtualDisplay.
+        projection?.registerCallback(object : MediaProjection.Callback() {
+            override fun onStop() { release() }
+        }, handler)
+
+        val w = metrics.widthPixels
+        val h = metrics.heightPixels
+        imageReader = ImageReader.newInstance(w, h, PixelFormat.RGBA_8888, 2)
+        virtualDisplay = projection?.createVirtualDisplay(
+            "PrintFacil", w, h, metrics.densityDpi,
+            DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+            imageReader?.surface, null, handler
+        )
+
+        imageReader?.setOnImageAvailableListener({ reader -&gt;
+            val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
+            image.use {
+                val plane = it.planes[0]
+                val rowPadding = plane.rowStride - plane.pixelStride * w
+                val bitmap = Bitmap.createBitmap(
+                    w + rowPadding / plane.pixelStride, h, Bitmap.Config.ARGB_8888
+                )
+                bitmap.copyPixelsFromBuffer(plane.buffer)
+                onBitmap(Bitmap.createBitmap(bitmap, 0, 0, w, h))
+            }
+        }, handler)
+    }
+
+    fun release() {
+        virtualDisplay?.release(); virtualDisplay = null
+        imageReader?.close(); imageReader = null
+        projection?.stop(); projection = null
+    }
+}
+
+/** Compressão respeitando o ajuste escolhido na interface web. */
+fun saveBitmap(bitmap: Bitmap, format: String = "png", quality: Int = 92): File {
+    val file = File(context.filesDir, "printfacil-${System.currentTimeMillis()}.${format}")
+    file.outputStream().use { out -&gt;
+        if (format == "jpg") {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)
+        } else {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+        }
+    }
+    return file
+}</code></pre>
+      </div>
+      <div class="callout callout--warn">
+        <strong>Privacidade do token</strong>
+        <p>
+          Guarde o <code>data</code> do <code>Intent</code> apenas em memória. Ele concede
+          acesso à tela inteira: não persista em <code>SharedPreferences</code>, não envie por
+          rede e descarte ao parar o serviço.
+        </p>
+      </div>
+    </section>
+
+    <section class="doc-section" id="ponte" aria-labelledby="h-ponte">
+      <h2 id="h-ponte">6. Ponte JavaScript ↔ Kotlin</h2>
+      <p class="doc-p">
+        Exponha somente funções específicas (nunca <code>addJavascriptInterface(Object())</code>).
+        Do lado web, detecte a ponte e use-a quando existir; caso contrário, caia para a
+        Screen Capture API — é exatamente o que <code>js/capture.js</code> faz hoje.
+      </p>
+      <div class="code-wrap">
+        <button class="copy-btn" type="button" data-copy>COPIAR</button>
+        <pre class="code" data-lang="Kotlin"><code>// MainActivity.kt
+webView.settings.apply {
+    javaScriptEnabled = true
+    domStorageEnabled = true
+    allowFileAccess = false
+}
+webView.addJavascriptInterface(NativeBridge(this), "PrintFacilNative")
+
+class NativeBridge(private val activity: MainActivity) {
+
+    @JavascriptInterface
+    fun isAndroidApp(): Boolean = true
+
+    @JavascriptInterface
+    fun hasOverlayPermission(): Boolean =
+        Settings.canDrawOverlays(activity)
+
+    @JavascriptInterface
+    fun requestOverlayPermission() {
+        activity.startActivity(
+            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:${activity.packageName}"))
+        )
+    }
+
+    @JavascriptInterface
+    fun startFloatingButton() {
+        ContextCompat.startForegroundService(
+            activity, Intent(activity, FloatingButtonService::class.java)
+        )
+    }
+
+    @JavascriptInterface
+    fun stopFloatingButton() {
+        activity.stopService(Intent(activity, FloatingButtonService::class.java))
+    }
+
+    @JavascriptInterface
+    fun setFabOptions(sizeDp: Int, opacityPercent: Int) {
+        PrefsStore.saveButtonStyle(activity, sizeDp, opacityPercent / 100f)
+    }
+}</code></pre>
+      </div>
+      <div class="code-wrap">
+        <button class="copy-btn" type="button" data-copy>COPIAR</button>
+        <pre class="code" data-lang="JavaScript"><code>// Trecho para js/capture.js em ambiente Android empacotado
+function hasNativeBridge() {
+  return typeof window.PrintFacilNative !== 'undefined' &amp;&amp;
+         window.PrintFacilNative.isAndroidApp();
+}
+
+// O nativo devolve o arquivo salvo, que entra na mesma galeria IndexedDB.
+window.PrintFacilNative_receive = function (fileUri) {
+  fetch(fileUri)                 // file:// exposto pelo app empacotado
+    .then(function (r) { return r.blob(); })
+    .then(function (blob) {
+      return PF.gallery.addAndRefresh({
+        blob: blob,
+        type: blob.type || 'image/png',
+        createdAt: Date.now(),
+        source: 'android-overlay'
+      });
+    })
+    .then(function () { PF.app.toast('Captura do overlay salva.', 'ok'); });
+};</code></pre>
+      </div>
+    </section>
+
+    <section class="doc-section" id="jornada" aria-labelledby="h-jornada">
+      <h2 id="h-jornada">7. Fluxo do usuário (primeira execução)</h2>
+      <ol class="steps">
+        <li>
+          <strong>Abrir o app</strong>
+          <p>WebView carrega <code>index.html</code> de <code>assets/</code>; a galeria lê o IndexedDB local.</p>
+        </li>
+        <li>
+          <strong>Permitir sobreposição</strong>
+          <p><code>Settings.canDrawOverlays()</code> falso → abre a tela de Ajustes do sistema uma única vez.</p>
+        </li>
+        <li>
+          <strong>Ativar o botão flutuante</strong>
+          <p>Serviço em primeiro plano sobe com notificação; o overlay aparece na posição salva.</p>
+        </li>
+        <li>
+          <strong>Autorizar captura de tela</strong>
+          <p>Diálogo do sistema <code>createScreenCaptureIntent()</code>. Aceito uma vez por sessão do serviço.</p>
+        </li>
+        <li>
+          <strong>Capturar em um toque</strong>
+          <p>Toque no botão → overlay oculto → <code>Bitmap</code> → PNG/JPG → prévia na galeria.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="doc-section" id="checklist" aria-labelledby="h-checklist">
+      <h2 id="h-checklist">8. Checklist de entrega</h2>
+      <ul class="checklist">
+        <li>Overlay arrastável, com posição/tamanho/opacidade persistidos</li>
+        <li>Serviço em primeiro plano com notificação e ação “Parar”</li>
+        <li>Sessão de <code>MediaProjection</code> única, liberada no <code>onDestroy</code></li>
+        <li>Uma captura por toque, sem espera extra após as permissões</li>
+        <li>Botão oculto durante a captura para não sair na imagem</li>
+        <li>Arquivos em PNG/JPG conforme ajuste, salvos localmente e na galeria</li>
+        <li>Nenhum envio de imagem para servidor; sem telemetria de conteúdo</li>
+        <li>Testado em Android 10, 12, 13 e 14+ (token de uso único)</li>
+      </ul>
+      <a class="btn btn--primary btn--lg" href="index.html">Voltar ao aplicativo</a>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <span>Print Fácil · guia Android</span>
+    <span class="dot" aria-hidden="true">•</span>
+    <a class="link-btn" href="index.html">Abrir o app</a>
+    <span class="dot" aria-hidden="true">•</span>
+    <a class="link-btn" href="index.html#/settings">Ajustes</a>
+  </footer>
+</div>
+
+<div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+<script src="js/doc.js"></script>
+</body>
+</html>
